@@ -14,14 +14,19 @@ public class ImageProcessTest {
     private ImageProcess imageProcess_test = null;
     private BufferedImage image = null;
     private BufferedImage image_test = null;
+    String[] files = null;
+    String originPath = "C:\\Users\\Joe\\Desktop\\Image\\all_alphabets_images\\images";
     @Before
     public void setUp() throws Exception {
-        File file = new File(System.getProperty("user.dir") + "\\imagehandled\\expand\\1_expand.bmp");
-        File file_test = new File(System.getProperty("user.dir") + "\\imagehandled\\imagetrans\\1_555.bmp");
-        image = ImageIO.read(file);
-        image_test = ImageIO.read(file_test);
-        imageProcess = new ImageProcess(file,image);
-        imageProcess_test = new ImageProcess(file_test,image_test);
+//        File file = new File(System.getProperty("user.dir") + "\\imagehandled\\expand\\1_expand.bmp");
+//        File file_test = new File(System.getProperty("user.dir") + "\\imagehandled\\imagetrans\\1_555.bmp");
+
+        File file = new File(originPath);
+        files = file.list();
+
+//        image_test = ImageIO.read(file_test);
+//        imageProcess = new ImageProcess(file,image);
+//        imageProcess_test = new ImageProcess(file_test,image_test);
 
     }
 
@@ -81,13 +86,23 @@ public class ImageProcessTest {
 
     @Test
     public void testSegmentation() throws Exception {
-        BufferedImage image_gray = imageProcess.Gray(image);
-        BufferedImage image_binary = imageProcess.Binary(image_gray);
-        BufferedImage image_erosion = imageProcess.Erosion(image_binary);
-        BufferedImage image_denoise  = imageProcess.Expand(image_erosion);
-        BufferedImage image_seg = imageProcess.Segmentation(image_denoise);
-        imageProcess.ImageTrans(image_seg);
-        imageProcess.GetEdge(image_seg);
+//        for (String i : files){
+//            System.out.println(i);
+//        }
+//        for (int i = 0 ; i < files.length/3 ; i++) {
+//            System.out.println(files[i]);
+            File readfile = new File(originPath + "\\" + " (1012).jpg");
+            image = ImageIO.read(readfile);
+            imageProcess = new ImageProcess(readfile,image);
+            BufferedImage image_gray = imageProcess.Gray(image);
+            BufferedImage image_binary = imageProcess.Binary(image_gray);
+            BufferedImage image_erosion = imageProcess.Erosion(image_binary);
+            BufferedImage image_denoise = imageProcess.Expand(image_erosion);
+            BufferedImage image_seg = imageProcess.Segmentation(image_denoise);
+            imageProcess.ImageTrans(image_seg);
+            int[][] alledge = imageProcess.GetSingleChar(image_seg);
+            imageProcess.PrintAfterSeg(image_denoise,alledge);
+//        }
     }
 
     @Test
@@ -96,12 +111,12 @@ public class ImageProcessTest {
 //        BufferedImage image_binary = imageProcess.Binary(image_gray);
 //        BufferedImage image_erosion = imageProcess.Erosion(image_binary);
 //        BufferedImage image_denoise  = imageProcess.Expand(image_erosion);
-        imageProcess.GetEdge(image);
+        imageProcess.GetSingleChar(image);
     }
 
     @Test
     public void testPrintAfterSeg() throws Exception {
-        int[][] alledge = imageProcess.GetEdge(image_test);
+        int[][] alledge = imageProcess.GetSingleChar(image_test);
         imageProcess.PrintAfterSeg(image,alledge);
     }
 }

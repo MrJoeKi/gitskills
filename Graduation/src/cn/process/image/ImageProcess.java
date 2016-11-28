@@ -362,30 +362,27 @@ public class ImageProcess {
                 }
             }
         }
-        for (int i : horizon) {
-            System.out.print(i + " ");
-        }
-        System.out.println("horizon-width : " + horizon.length);
-        System.out.println("width : " + width);
-        System.out.println("height : " + height);
-        int[] position_horizon = new int[12];
-        int[] position_pixnumber = new int[6];
-        int index = 0;
-        for (int i = 1; i < horizon.length - 1; i++) {
-            if (horizon[i] > 4 && horizon[i - 1] < 5) {
-                position_horizon[index] = i;
-                index++;
-            } else if (horizon[i] > 4 && horizon[i + 1] < 5) {
-                position_horizon[index] = i;
-                index++;
-            }
-        }
-        for (int i = 0; i < position_horizon.length; i++) {
-            System.out.print(position_horizon[i] + " ");
-        }
-        System.out.println();
 
-        // AffineTransform at = new AffineTransform();
+//        System.out.println("horizon-width : " + horizon.length);
+//        System.out.println("width : " + width);
+//        System.out.println("height : " + height);
+//        int[] position_horizon = new int[12];
+//        int[] position_pixnumber = new int[6];
+//        int index = 0;
+//        for (int i = 1; i < horizon.length - 1; i++) {
+//            if (horizon[i] > 4 && horizon[i - 1] < 5) {
+//                position_horizon[index] = i;
+//                index++;
+//            } else if (horizon[i] > 4 && horizon[i + 1] < 5) {
+//                position_horizon[index] = i;
+//                index++;
+//            }
+//        }
+//        for (int i = 0; i < position_horizon.length; i++) {
+//            System.out.print(position_horizon[i] + " ");
+//        }
+//        System.out.println();
+
         BufferedImage newPic = new BufferedImage(width, height,
                 BufferedImage.TYPE_BYTE_BINARY);
 
@@ -439,7 +436,7 @@ public class ImageProcess {
         SaveFile(image_new, path);
     }
 
-    public int[][] GetEdge(BufferedImage image) throws IOException {
+    public int[][] GetSingleChar(BufferedImage image) throws IOException {
 //        System.out.println(width);
 //        System.out.println(height);
         int[][] flag = new int[height][width];
@@ -478,7 +475,7 @@ public class ImageProcess {
                     EightPosition(flag, i, j, edge);
                     System.out.println("i = " + i);
                     System.out.println("j = " + j);
-                    if (((edge[1] - edge[0]) * (edge[3] - edge[2])) > 100) {
+                    if (((edge[1] - edge[0]) * (edge[3] - edge[2])) > 150) {
                         alledge[index][0] = edge[0];
                         alledge[index][1] = edge[1] + 1;
                         alledge[index][2] = edge[2];
@@ -491,17 +488,16 @@ public class ImageProcess {
                         index++;
                         i = 0;
                         j = 0;
-                        System.out.println("i = " + i + "j = " + j);
-//                        for (int k = 0; k < height; k++) {
-//                            for (int m = 0; m < width; m++) {
-//                                if (flag[k][m] == 1) {
-//                                    System.out.print("*");
-//                                } else {
-//                                    System.out.print(" ");
-//                                }
-//                            }
-//                            System.out.println();
-//                        }
+                        for (int k = 0; k < height; k++) {
+                            for (int m = 0; m < width; m++) {
+                                if (flag[k][m] == 1) {
+                                    System.out.print("*");
+                                } else {
+                                    System.out.print(" ");
+                                }
+                            }
+                            System.out.println();
+                        }
                     }
                 }
             }
@@ -571,7 +567,7 @@ public class ImageProcess {
                     imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
                     ++index;
 
-                    image_afterseg = new BufferedImage((alledge[k][3] - alledge[k][2] - 2) / 2 , alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
+                    image_afterseg = new BufferedImage((alledge[k][3] - alledge[k][2] - 2) / 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
                     for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
                         boolean flag = false;
                         for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1, n = 0; i < alledge[k][3] - 1; i++, n++) {
@@ -580,7 +576,11 @@ public class ImageProcess {
                                 flag = true;
                             }
                             int rgb = image.getRGB(i, j);
-                            image_afterseg.setRGB(n, m, rgb);
+                            if (n < (alledge[k][3] - alledge[k][2] - 2) / 2 && m < alledge[k][1] - alledge[k][0] - 2) {
+                                image_afterseg.setRGB(n, m, rgb);
+                            } else {
+                                continue;
+                            }
                         }
                     }
                     path = path_process + "\\single\\" + file.getName().replace(".jpg", "") + "_" + index + ".bmp";
@@ -695,9 +695,9 @@ public class ImageProcess {
         //左上
         if ((x_p - 1) >= 0 && (y_p - 1) >= 0 && flag[y_p - 1][x_p - 1] == 1) {
             flag[y_p - 1][x_p - 1] = 0;
-            if (y_p - 1 < edge[2])
+            if (y_p - 1 < edge[0])
                 edge[0] = y_p - 1;
-            if (x_p - 1 < edge[0])
+            if (x_p - 1 < edge[2])
                 edge[2] = x_p - 1;
             EightPosition(flag, x_p - 1, y_p - 1, edge);
         }

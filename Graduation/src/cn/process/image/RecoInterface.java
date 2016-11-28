@@ -63,7 +63,7 @@ public class RecoInterface extends JFrame {
                                                    BufferedImage imageErosion = imageProcess.Erosion(imageBinary);
                                                    BufferedImage imageExpand = imageProcess.Expand(imageErosion);
                                                    BufferedImage imageEdge = imageProcess.Segmentation(imageExpand);
-                                                   int[][] alledge = imageProcess.GetEdge(imageEdge);
+                                                   int[][] alledge = imageProcess.GetSingleChar(imageEdge);
                                                    imageProcess.PrintAfterSeg(imageExpand, alledge);
                                                    imageProcess.YProjection(imageExpand);
                                                } catch (IOException e1) {
