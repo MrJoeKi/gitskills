@@ -59,9 +59,7 @@ public class GaussianBlur {
                 pixels[current++] = img.getRGB(tx, ty) & 0xFF;
             }
         }
-        for (int i : pixels){
-            System.out.println(i);
-        }
+
     }
 
     private static void fillMatrix(int[][] matrix, int[] values) {
@@ -75,22 +73,19 @@ public class GaussianBlur {
     }
 
     private static int avgMatrix(int[][] matrix) {
-        int r = 0;
-        int g = 0;
         int b = 0;
 
         for (int i = 0; i < matrix.length; i++) {
             int[] x = matrix[i];
+
             for (int j = 0; j < x.length; j++) {
                 if (j == 1) {
                     continue;
                 }
                 Color c = new Color(x[j]);
-                r += c.getRed();
-                g += c.getGreen();
                 b += c.getBlue();
             }
         }
-        return new Color(r / 8, g / 8, b / 8).getRGB();
+        return new Color(b/8, b/8, b/8).getRGB();
     }
 }

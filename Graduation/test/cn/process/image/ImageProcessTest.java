@@ -5,6 +5,10 @@ import org.junit.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
 
@@ -79,30 +83,57 @@ public class ImageProcessTest {
 
     @Test
     public void testGaussian() throws Exception {
-        BufferedImage image_gray = imageProcess.Gray(image);
-        BufferedImage image_binary = imageProcess.Binary(image_gray);
-        imageProcess.Gaussian(image_binary);
+        int[] filename = new int[files.length];
+        for (int i = 0 ; i < filename.length; i++){
+            filename[i] = Integer.parseInt(files[i].substring(2,files[i].length() - 5));
+        }
+        Arrays.sort(filename);
+        for (int i = 0 ; i < filename.length ; i++) {
+            File readfile = new File(originPath + "\\ (" + filename[i] + ").jpg");
+            image = ImageIO.read(readfile);
+            imageProcess = new ImageProcess(readfile,image);
+            System.out.println(readfile.getName());
+            BufferedImage image_gray = imageProcess.Gray(image);
+            BufferedImage image_binary = imageProcess.Binary(image_gray);
+            BufferedImage image_gauss = imageProcess.Gaussian(image_binary);
+            BufferedImage image_denoise = imageProcess.Erosion(image_gauss);
+            BufferedImage image_seg = imageProcess.Segmentation(image_denoise);
+            imageProcess.ImageTrans(image_seg);
+            try {
+                int[][] alledge = imageProcess.GetSingleChar(image_seg);
+                imageProcess.PrintAfterSeg(image_denoise, alledge);
+            } catch (Exception e) {
+                continue ;
+            }
+        }
     }
 
     @Test
     public void testSegmentation() throws Exception {
-//        for (String i : files){
-//            System.out.println(i);
-//        }
-//        for (int i = 0 ; i < files.length/3 ; i++) {
-//            System.out.println(files[i]);
-            File readfile = new File(originPath + "\\" + " (1012).jpg");
+        int[] filename = new int[files.length];
+        for (int i = 0 ; i < filename.length; i++){
+            filename[i] = Integer.parseInt(files[i].substring(2,files[i].length() - 5));
+        }
+        Arrays.sort(filename);
+        for (int i = 0 ; i < filename.length ; i++) {
+            File readfile = new File(originPath + "\\ (" + filename[i] + ").jpg");
+            System.out.println(readfile.getName());
             image = ImageIO.read(readfile);
             imageProcess = new ImageProcess(readfile,image);
             BufferedImage image_gray = imageProcess.Gray(image);
             BufferedImage image_binary = imageProcess.Binary(image_gray);
             BufferedImage image_erosion = imageProcess.Erosion(image_binary);
             BufferedImage image_denoise = imageProcess.Expand(image_erosion);
+//            BufferedImage image_denoise = imageProcess.MedianFiltering(image_binary);
             BufferedImage image_seg = imageProcess.Segmentation(image_denoise);
             imageProcess.ImageTrans(image_seg);
-            int[][] alledge = imageProcess.GetSingleChar(image_seg);
-            imageProcess.PrintAfterSeg(image_denoise,alledge);
-//        }
+            try {
+                int[][] alledge = imageProcess.GetSingleChar(image_seg);
+                imageProcess.PrintAfterSeg(image_denoise,alledge);
+            } catch (Exception e){
+                continue ;
+            }
+        }
     }
 
     @Test
@@ -118,5 +149,12 @@ public class ImageProcessTest {
     public void testPrintAfterSeg() throws Exception {
         int[][] alledge = imageProcess.GetSingleChar(image_test);
         imageProcess.PrintAfterSeg(image,alledge);
+    }
+
+    @Test
+    public void testMakeDir() throws Exception {
+        File file_test = new File("D:\\a\\b\\b\\c");
+        ImageProcess.MakeDir(file_test);
+//        System.out.println(file_test.getName());
     }
 }

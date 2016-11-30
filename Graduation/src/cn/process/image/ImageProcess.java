@@ -34,7 +34,7 @@ public class ImageProcess {
     public BufferedImage Gray(BufferedImage image) throws IOException {
 
         int rgb;
-        BufferedImage image_gray = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+        BufferedImage image_gray = new BufferedImage(width, height, image.getType());
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -47,8 +47,8 @@ public class ImageProcess {
                 image_gray.setRGB(i, j, color_new.getRGB());
             }
         }
-        String path = path_process + "\\gray\\" + file.getName().replace(".jpg", "") + "_gray.bmp";
-        SaveFile(image_gray, path);
+        String path = path_process + "\\gray";
+        SaveFile(image_gray, path , file.getName().replace(".jpg", "") + "_gray.bmp");
         return image_gray;
     }
 
@@ -66,8 +66,8 @@ public class ImageProcess {
                     image_binary.setRGB(i, j, forge_color.getRGB());
             }
         }
-        String path = path_process + "\\binary\\" + file.getName().replace(".jpg", "") + "_binary.bmp";
-        SaveFile(image_binary, path);
+        String path = path_process + "\\binary";
+        SaveFile(image_binary, path, file.getName().replace(".jpg", "") + "_binary.bmp");
         return image_binary;
     }
 
@@ -128,10 +128,10 @@ public class ImageProcess {
                 image_expand.setRGB(j, i, color.getRGB());
             }
         }
-        File newFile = new File(System.getProperty("user.dir") + "/expand.bmp");
-        ImageIO.write(image_expand, "bmp", newFile);
-        String path = path_process + "\\expand\\" + file.getName().replace(".jpg", "") + "_expand.bmp";
-        SaveFile(image_expand, path);
+//        File newFile = new File(System.getProperty("user.dir") + "/expand.bmp");
+//        ImageIO.write(image_expand, "bmp", newFile);
+        String path = path_process + "\\expand";
+        SaveFile(image_expand, path, file.getName().replace(".jpg", "") + "_expand.bmp");
         return image_expand;
     }
 
@@ -195,14 +195,14 @@ public class ImageProcess {
             }
         }
 //        image_erosion.setRGB(0,0,width,height,outPixels,0,1);
-        String path = path_process + "\\erosion\\" + file.getName().replace(".jpg", "") + "_erosion.bmp";
-        SaveFile(image_erosion, path);
+        String path = path_process + "\\erosion" ;
+        SaveFile(image_erosion, path, file.getName().replace(".jpg", "") + "_erosion.bmp");
         return image_erosion;
     }
 
     //    均值滤波
-    public void AvrFiltering(BufferedImage image) throws IOException {
-        BufferedImage image_erosion = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+    public BufferedImage AvrFiltering(BufferedImage image) throws IOException {
+        BufferedImage image_denoise = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int[] inPixels = new int[width * height];
         int[] outPixels = new int[width * height];
 
@@ -234,17 +234,18 @@ public class ImageProcess {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 Color color = new Color(outPixels[i * width + j]);
-                image_erosion.setRGB(j, i, color.getRGB());
+                image_denoise.setRGB(j, i, color.getRGB());
             }
         }
 //        image_erosion.setRGB(0,0,width,height,outPixels,0,1);
-        String path = path_process + "\\avg\\" + file.getName().replace(".jpg", "") + "_avgfilter.bmp";
-        SaveFile(image_erosion, path);
+        String path = path_process + "\\avg";
+        SaveFile(image_denoise, path, file.getName().replace(".jpg", "") + "_avgfilter.bmp");
+        return image_denoise;
     }
 
     //    中值滤波
-    public void MedianFiltering(BufferedImage image) throws IOException {
-        BufferedImage image_erosion = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+    public BufferedImage MedianFiltering(BufferedImage image) throws IOException {
+        BufferedImage image_denoise = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int[] inPixels = new int[width * height];
         int[] outPixels = new int[width * height];
 
@@ -281,12 +282,13 @@ public class ImageProcess {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 Color color = new Color(outPixels[i * width + j]);
-                image_erosion.setRGB(j, i, color.getRGB());
+                image_denoise.setRGB(j, i, color.getRGB());
             }
         }
 //        image_erosion.setRGB(0,0,width,height,outPixels,0,1);
-        String path = path_process + "\\median\\" + file.getName().replace(".jpg", "") + "_medfilter.bmp";
-        SaveFile(image_erosion, path);
+        String path = path_process + "\\median";
+        SaveFile(image_denoise, path, file.getName().replace(".jpg", "") + "_medfilter.bmp");
+        return image_denoise;
     }
 
     //    高斯滤波，高斯模糊（有问题！！！）
@@ -295,8 +297,8 @@ public class ImageProcess {
         BufferedImage image_gaussian = null;
         GaussianBlur gaussianBlur = new GaussianBlur(width, height, image);
         image_gaussian = gaussianBlur.Gaussian();
-        String path = path_process + "\\gaussian\\" + file.getName().replace(".jpg", "") + "_gaussian.bmp";
-        SaveFile(image_gaussian, path);
+        String path = path_process + "\\gaussian";
+        SaveFile(image_gaussian, path, file.getName().replace(".jpg", "") + "_gaussian.bmp");
         return image_gaussian;
     }
 
@@ -313,8 +315,8 @@ public class ImageProcess {
             }
         }
         BufferedImage image_new = getHist(horizon);
-        String path = path_process + "\\Ypro\\" + file.getName().replace(".jpg", "") + "_yprojection.bmp";
-        SaveFile(image_new, path);
+        String path = path_process + "\\Ypro";
+        SaveFile(image_new, path, file.getName().replace(".jpg", "") + "_yprojection.bmp");
     }
 
     //    水平-X投影直方图
@@ -353,15 +355,15 @@ public class ImageProcess {
 
     //边缘检测
     public BufferedImage Segmentation(BufferedImage image) throws IOException {
-        int[] horizon = new int[width];
-        for (int i = 0; i < width; i++) {
-            int numpixel = 0;
-            for (int j = 0; j < height; j++) {
-                if ((image.getRGB(i, j) & 0xFF) < background_color.getRed()) {
-                    ++horizon[i];
-                }
-            }
-        }
+//        int[] horizon = new int[width];
+//        for (int i = 0; i < width; i++) {
+//            int numpixel = 0;
+//            for (int j = 0; j < height; j++) {
+//                if ((image.getRGB(i, j) & 0xFF) < background_color.getRed()) {
+//                    ++horizon[i];
+//                }
+//            }
+//        }
 
 //        System.out.println("horizon-width : " + horizon.length);
 //        System.out.println("width : " + width);
@@ -403,20 +405,9 @@ public class ImageProcess {
                 }
             }
         }
-        String path = path_process + "\\getedge\\" + file.getName().replace(".jpg", "") + "_edgedete.bmp";
-        SaveFile(imageSeg, path);
+        String path = path_process + "\\getedge";
+        SaveFile(imageSeg, path, file.getName().replace(".jpg", "") + "_edgedete.bmp");
         return imageSeg;
-//        index=0;
-//        for (int j = 0; j < height && index <11; j++){
-//            for (int i = position_horizon[10]; i < position_horizon[10+1]+1; i++) {
-//                if ((image.getRGB(i,j) & 0xff ) < background_color.getRed()){
-//                    System.out.print("*");
-//                }else{
-//                    System.out.print(" ");
-//                }
-//            }
-//            System.out.println();
-//        }
     }
 
     public void ImageTrans(BufferedImage image) throws IOException {
@@ -432,8 +423,8 @@ public class ImageProcess {
                 }
             }
         }
-        String path = path_process + "\\imagetrans\\" + file.getName().replace(".jpg", "") + "_colortrans.bmp";
-        SaveFile(image_new, path);
+        String path = path_process + "\\imagetrans";
+        SaveFile(image_new, path, file.getName().replace(".jpg", "") + "_colortrans.bmp");
     }
 
     public int[][] GetSingleChar(BufferedImage image) throws IOException {
@@ -546,10 +537,10 @@ public class ImageProcess {
         String path = null;
         for (int k = 0 ; k < alledge.length ; k++) {
             if (((alledge[k][1] - alledge[k][0]) * (alledge[k][3] - alledge[k][2])) == 0) {
-                continue;
+                continue ;
             } else {
                 int area = ((alledge[index][1] - alledge[index][0]) * (alledge[index][3] - alledge[index][2]));
-                if (area > 700) {
+                if (area > 700 &&  (alledge[index][3] - alledge[index][2]) > 30) {
                     image_afterseg = new BufferedImage((alledge[k][3] - alledge[k][2] - 2) / 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
                     for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
                         boolean flag = false;
@@ -562,8 +553,8 @@ public class ImageProcess {
                             image_afterseg.setRGB(n, m, rgb);
                         }
                     }
-                    path = path_process + "\\single\\" + file.getName().replace(".jpg", "") + "_" + index + ".bmp";
-                    SaveFile(image_afterseg, path);
+                    path = path_process + "\\single";
+                    SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
                     imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
                     ++index;
 
@@ -583,33 +574,54 @@ public class ImageProcess {
                             }
                         }
                     }
-                    path = path_process + "\\single\\" + file.getName().replace(".jpg", "") + "_" + index + ".bmp";
-                    SaveFile(image_afterseg, path);
+                    path = path_process + "\\single";
+                    SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
                     imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
                     index++;
 
                 } else {
-                    image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] - 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
-                    System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
-                    System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
-                    System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
-                    System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
+                    if ( k == 0 && alledge[k][2] == 1){
+                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] , alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
+                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
+                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
+                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
+                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
 
-                    path = path_process + "\\single\\" + file.getName().replace(".jpg", "") + "_" + index + ".bmp";
-                    for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
-                        boolean flag = false;
-                        for (int i = alledge[k][2], n = 0; i < alledge[k][3] - 1; i++, n++) {
-                            if (i != alledge[0][2] && !flag) {
-                                i++;
-                                flag = true;
+                        for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                            boolean flag = false;
+                            for (int i = alledge[k][2] - 1, n = 0; i < alledge[k][3] - 1; i++, n++) {
+
+                                int rgb = image.getRGB(i, j);
+                                image_afterseg.setRGB(n, m, rgb);
                             }
-                            int rgb = image.getRGB(i, j);
-                            image_afterseg.setRGB(n, m, rgb);
                         }
+                        path = path_process + "\\single";
+                        SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
+                        imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
+                        index++;
+                    } else {
+                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] - 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
+                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
+                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
+                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
+                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
+
+                        for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                            boolean flag = false;
+                            for (int i = alledge[k][2], n = 0; i < alledge[k][3] - 1; i++, n++) {
+                                if (i != alledge[0][2] && !flag) {
+                                    i++;
+                                    flag = true;
+                                }
+                                int rgb = image.getRGB(i, j);
+                                image_afterseg.setRGB(n, m, rgb);
+                            }
+                        }
+                        path = path_process + "\\single";
+                        SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
+                        imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index);
+                        index++;
                     }
-                    SaveFile(image_afterseg, path);
-                    imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
-                    index++;
                 }
             }
         }
@@ -646,7 +658,7 @@ public class ImageProcess {
                 imageDest.setRGB(col,row,color.getRGB());
             }
         }
-        SaveFile(imageDest,path_process + "\\normalization\\" + file.getName().replace(".jpg", "") + "_"+ index + "normal.bmp" );
+        SaveFile(imageDest,path_process + "\\normalization", file.getName().replace(".jpg", "") + "_"+ index + "normal.bmp" );
     }
 
     public int getClip(int x, int max, int min) {
@@ -759,12 +771,19 @@ public class ImageProcess {
     }
 
     //    保存文件
-    public void SaveFile(BufferedImage image, String path) throws IOException {
-        File newFile = new File(path);
-        File newFilePar = new File(newFile.getParent());
-        if ( !newFilePar.exists() || !newFilePar.isDirectory() ){
-            newFilePar.mkdir();
-        }
+    public void SaveFile(BufferedImage image, String path, String filename) throws IOException {
+        File fileDir = new File(path);
+        MakeDir(fileDir);
+        File newFile = new File(path + "\\" + filename);
         ImageIO.write(image, "bmp", newFile);
+    }
+
+    public static void MakeDir(File file) {
+        if ( file.getParentFile().exists() ){
+            file.mkdir();
+        } else {
+            MakeDir(file.getParentFile());
+            file.mkdir();
+        }
     }
 }
