@@ -70,9 +70,9 @@ public class Rinterface {
                             BufferedImage imageBinary = imageProcess.Binary(imageGray);
                             BufferedImage imageErosion = imageProcess.Erosion(imageBinary);
                             BufferedImage imageExpand = imageProcess.Expand(imageErosion);
-                            BufferedImage imageEdge = imageProcess.Segmentation(imageExpand);
+                            BufferedImage imageEdge = imageProcess.Segmentation(imageExpand,"\\edge_ero");
                             int[][] alledge = imageProcess.GetSingleChar(imageEdge);
-                            imageProcess.PrintAfterSeg(imageExpand, alledge);
+                            imageProcess.PrintAfterSeg(imageExpand, alledge,"\\single");
                             imageProcess.YProjection(imageExpand);
                         } catch (IOException e1) {
                             e1.printStackTrace();

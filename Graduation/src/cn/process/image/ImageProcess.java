@@ -8,6 +8,7 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -21,10 +22,15 @@ public class ImageProcess {
     String path_process = "D:\\JaveDev\\Graduation\\imagehandled";
     static Color background_color = Color.WHITE;
     static Color forge_color = Color.BLACK;
-    int normalizeSize = 28;
+    int normalizeSize = 16;
     int charNum = 6;
 
+    public ImageProcess(){
+
+    }
+
     public ImageProcess(File file, BufferedImage image) throws IOException {
+
         this.file = file;
         width = image.getWidth();
         height = image.getHeight();
@@ -32,7 +38,6 @@ public class ImageProcess {
 
     //    灰度化操作
     public BufferedImage Gray(BufferedImage image) throws IOException {
-
         int rgb;
         BufferedImage image_gray = new BufferedImage(width, height, image.getType());
 
@@ -48,7 +53,7 @@ public class ImageProcess {
             }
         }
         String path = path_process + "\\gray";
-        SaveFile(image_gray, path , file.getName().replace(".jpg", "") + "_gray.bmp");
+        SaveFile(image_gray, path, file.getName().replace(".jpg", "") + "_gray.bmp");
         return image_gray;
     }
 
@@ -195,7 +200,7 @@ public class ImageProcess {
             }
         }
 //        image_erosion.setRGB(0,0,width,height,outPixels,0,1);
-        String path = path_process + "\\erosion" ;
+        String path = path_process + "\\erosion";
         SaveFile(image_erosion, path, file.getName().replace(".jpg", "") + "_erosion.bmp");
         return image_erosion;
     }
@@ -218,9 +223,9 @@ public class ImageProcess {
                     //g = (f(x-1,y-1) + f(x,y-1)+ f(x+1,y-1)
                     //  + f(x-1,y) + f(x,y) + f(x+1,y)
                     //  + f(x-1,y+1) + f(x,y+1) + f(x+1,y+1))/9
-                    r = (cm.getRed(inPixels[x-1+(y-1)*width]) + cm.getRed(inPixels[x+(y-1)*width])+ cm.getRed(inPixels[x+1+(y-1)*width])
-                            + cm.getRed(inPixels[x-1+(y)*width]) + cm.getRed(inPixels[x+(y)*width]) + cm.getRed(inPixels[x+1+(y)*width])
-                            + cm.getRed(inPixels[x-1+(y+1)*width]) + cm.getRed(inPixels[x+(y+1)*width]) + cm.getRed(inPixels[x+1+(y+1)*width]))/9;
+                    r = (cm.getRed(inPixels[x - 1 + (y - 1) * width]) + cm.getRed(inPixels[x + (y - 1) * width]) + cm.getRed(inPixels[x + 1 + (y - 1) * width])
+                            + cm.getRed(inPixels[x - 1 + (y) * width]) + cm.getRed(inPixels[x + (y) * width]) + cm.getRed(inPixels[x + 1 + (y) * width])
+                            + cm.getRed(inPixels[x - 1 + (y + 1) * width]) + cm.getRed(inPixels[x + (y + 1) * width]) + cm.getRed(inPixels[x + 1 + (y + 1) * width])) / 9;
 //                    r = (cm.getRed(inPixels[x + (y - 1) * width])
 //                            + cm.getRed(inPixels[x - 1 + (y) * width]) + cm.getRed(inPixels[x + (y) * width]) + cm.getRed(inPixels[x + 1 + (y) * width])
 //                            + +cm.getRed(inPixels[x + (y + 1) * width])) / 5;
@@ -329,7 +334,7 @@ public class ImageProcess {
         BufferedImage pic = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = pic.createGraphics();
         g2d.setPaint(Color.WHITE);
-        g2d.fillRect(0, 0, width, height );
+        g2d.fillRect(0, 0, width, height);
 //        g2d.setPaint(Color.BLACK);
 //        g2d.drawLine(5, 250, 150, 250);
 //        g2d.drawLine(5, 250, 5, 5);
@@ -345,7 +350,7 @@ public class ImageProcess {
         for (int i = 0; i < intensity.length; i++) {
             int frequency = (int) (intensity[i] * rate);
             g2d.setPaint(Color.BLUE);
-            g2d.drawLine( i, height,  i,  height - frequency );
+            g2d.drawLine(i, height, i, height - frequency);
         }
 
         g2d.setPaint(Color.RED);
@@ -354,7 +359,7 @@ public class ImageProcess {
     }
 
     //边缘检测
-    public BufferedImage Segmentation(BufferedImage image) throws IOException {
+    public BufferedImage Segmentation(BufferedImage image, String pathRoot) throws IOException {
 //        int[] horizon = new int[width];
 //        for (int i = 0; i < width; i++) {
 //            int numpixel = 0;
@@ -393,7 +398,7 @@ public class ImageProcess {
         Kernel kernel = new Kernel(3, 3, elements);
         ConvolveOp cop = new ConvolveOp(kernel, ConvolveOp.EDGE_ZERO_FILL, null);
         cop.filter(image, newPic);
-        BufferedImage imageSeg = new BufferedImage(width,height,BufferedImage.TYPE_BYTE_BINARY);
+        BufferedImage imageSeg = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 if ((newPic.getRGB(i, j) & 0xFF) == background_color.getRed()) {
@@ -405,7 +410,7 @@ public class ImageProcess {
                 }
             }
         }
-        String path = path_process + "\\getedge";
+        String path = path_process + pathRoot;
         SaveFile(imageSeg, path, file.getName().replace(".jpg", "") + "_edgedete.bmp");
         return imageSeg;
     }
@@ -459,9 +464,9 @@ public class ImageProcess {
             for (int j = 0; j < height; j++) {
                 if (flag[j][i] == 1) {
                     edge[0] = j;
-                    edge[1] = j+1;
+                    edge[1] = j + 1;
                     edge[2] = i;
-                    edge[3] = i+1;
+                    edge[3] = i + 1;
                     flag[j][i] = 0;
                     EightPosition(flag, i, j, edge);
                     System.out.println("i = " + i);
@@ -502,7 +507,7 @@ public class ImageProcess {
 //            }
 //        }
 
-        for (int k = 0 ; k < 6 ; k++) {
+        for (int k = 0; k < 6; k++) {
             for (int j = alledge[k][0]; j < alledge[k][1]; j++) {
                 for (int i = alledge[k][2]; i < alledge[k][3]; i++) {
                     if (flag_old[j][i] == 1)
@@ -514,8 +519,8 @@ public class ImageProcess {
             }
         }
 
-        for (int k = 0 ; k < 6 ; k++) {
-            System.out.println("Area[" + k + "]:" + ((alledge[k][1] - alledge[k][0]) * (alledge[k][3] - alledge[k][2] )));
+        for (int k = 0; k < 6; k++) {
+            System.out.println("Area[" + k + "]:" + ((alledge[k][1] - alledge[k][0]) * (alledge[k][3] - alledge[k][2])));
         }
 
         return alledge;
@@ -531,84 +536,320 @@ public class ImageProcess {
 
     }
 
-    public void PrintAfterSeg(BufferedImage image,int[][] alledge) throws IOException {
+    public void PrintAfterSeg(BufferedImage image, int[][] alledge, String pathRoot) throws IOException {
         BufferedImage image_afterseg = null;
         int index = 0;
         String path = null;
-        for (int k = 0 ; k < alledge.length ; k++) {
+        for (int k = 0; k < alledge.length; k++) {
             if (((alledge[k][1] - alledge[k][0]) * (alledge[k][3] - alledge[k][2])) == 0) {
-                continue ;
+                continue;
             } else {
                 int area = ((alledge[index][1] - alledge[index][0]) * (alledge[index][3] - alledge[index][2]));
-                if (area > 700 &&  (alledge[index][3] - alledge[index][2]) > 30) {
-                    image_afterseg = new BufferedImage((alledge[k][3] - alledge[k][2] - 2) / 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
-                    for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                if (area > 700 && (alledge[index][3] - alledge[index][2]) > 30) {
+                    int width = (alledge[k][3] - alledge[k][2] - 2) / 2;
+                    int height = alledge[k][1] - alledge[k][0] - 2;
+
+////                    去除上部空白行
+//                    int countZero = 0;
+//                    int blankUp = 0;
+//                    for (int i = alledge[k][0] + 1; i < alledge[k][1] - 1; i++) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankUp++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][0] + 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][2]; j < (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2); j++) {
+//                            if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除下部空白行
+//                    int blankDown = 0;
+//                    countZero = 0;
+//                    for (int i = alledge[k][1] - 1; i > alledge[k][0] + 1; i--) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankDown++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][2]; j < (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2); j++) {
+//                            if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除左边空白行
+//                    int blankLeft = 0;
+//                    countZero = 0;
+//                    for (int i = alledge[k][2]; i < (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2); i++) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankLeft++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                            if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除右边空白行
+//                    int blankRight = 0;
+//                    countZero = 0;
+//                    for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2); i > alledge[k][2]; i--) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankRight++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                            if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+                    int[] deleteBlank = DeleteBlank(image,alledge[k][2],(alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2),alledge[k][0] + 1,alledge[k][1] - 1);
+                    int blankUp = deleteBlank[0];
+                    int blankDown =deleteBlank[1];
+                    int blankLeft = deleteBlank[2];
+                    int blankRight = deleteBlank[3];
+                    image_afterseg = new BufferedImage(width - blankLeft - blankRight, height - blankUp - blankDown, BufferedImage.TYPE_BYTE_BINARY);
+//                    System.out.println("alledge[" + k + "][0] :" + alledge[k][0]);
+//                    System.out.println("alledge[" + k + "][1] :" + alledge[k][1]);
+//                    System.out.println("alledge[" + k + "][2] :" + alledge[k][2]);
+//                    System.out.println("alledge[" + k + "][3] :" + alledge[k][3]);
+//                    System.out.println("height start:" + (alledge[k][0] + 1 + blankUp) + "end:" + (alledge[k][1] - 1 - blankDown));
+                    for (int j = alledge[k][0] + 1 + blankUp, m = 0; j < alledge[k][1] - 1 - blankDown; j++, m++) {
                         boolean flag = false;
-                        for (int i = alledge[k][2], n = 0; i < (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) ; i++, n++) {
+                        for (int i = alledge[k][2] + blankLeft, n = 0; i < (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - blankRight; i++, n++) {
                             if (i != alledge[0][2] && !flag) {
                                 i++;
                                 flag = true;
                             }
                             int rgb = image.getRGB(i, j);
+                            System.out.println("n = " + n + ",m = " + m + "i = " + i + ",j = " + j);
                             image_afterseg.setRGB(n, m, rgb);
                         }
                     }
-                    path = path_process + "\\single";
+                    path = path_process + pathRoot;
+
                     SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
-                    imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
+                    imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index, pathRoot + "_normal");
                     ++index;
 
-                    image_afterseg = new BufferedImage((alledge[k][3] - alledge[k][2] - 2) / 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
-                    for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                    width = (alledge[k][3] - alledge[k][2] - 2) / 2;
+                    height = alledge[k][1] - alledge[k][0] - 2;
+
+////                    去除上部空白行
+//                    countZero = 0;
+//                    blankUp = 0;
+//                    for (int i = alledge[k][0] + 1; i < alledge[k][1] - 1; i++) {
+//                        if (countZero == width + 2 || countZero == width + 1) {
+//                            blankUp++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][0] + 1) {
+//                            break;
+//                        }
+//                        for (int j = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; j < alledge[k][3] - 1; j++) {
+//                            if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除下部空白行
+//                    blankDown = 0;
+//                    countZero = 0;
+//                    for (int i = alledge[k][1] - 1; i > alledge[k][0] + 1; i--) {
+//                        if (countZero == width + 2 || countZero == width + 1) {
+//                            blankDown++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; j < alledge[k][3] - 1; j++) {
+//                            if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除左边空白行
+//                    int blankLeft = 0;
+//                    countZero = 0;
+//                    for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; i < alledge[k][3] - 1; i++) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankLeft++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                            if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+//
+////                    去除右边空白行
+//                    int blankRight = 0;
+//                    countZero = 0;
+//                    for (int i = alledge[k][3] - 1; i > (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; i--) {
+//                        if (countZero == width + 1 || countZero == width) {
+//                            blankRight++;
+//                            countZero = 0;
+//                        } else if (i != alledge[k][1] - 1) {
+//                            break;
+//                        }
+//                        for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                            if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                countZero++;
+//                            }
+//                        }
+//                    }
+
+                    deleteBlank = DeleteBlank(image,(alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1,alledge[k][3] - 1,alledge[k][0] + 1,alledge[k][1] - 1);
+                    blankUp = deleteBlank[0];
+                    blankDown =deleteBlank[1];
+                    blankLeft = deleteBlank[2];
+                    blankRight = deleteBlank[3];
+
+                    image_afterseg = new BufferedImage(width - blankLeft - blankRight, height - blankUp - blankDown, BufferedImage.TYPE_BYTE_BINARY);
+                    for (int j = alledge[k][0] + 1 + blankUp, m = 0; j < alledge[k][1] - 1 - blankDown; j++, m++) {
                         boolean flag = false;
-                        for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1, n = 0; i < alledge[k][3] - 1; i++, n++) {
+                        for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1 + blankLeft, n = 0; i < alledge[k][3] - 1 - blankRight; i++, n++) {
                             if (i != alledge[0][2] && !flag) {
                                 i++;
                                 flag = true;
                             }
                             int rgb = image.getRGB(i, j);
-                            if (n < (alledge[k][3] - alledge[k][2] - 2) / 2 && m < alledge[k][1] - alledge[k][0] - 2) {
+                            if (n < width && m < height - blankUp - blankDown) {
                                 image_afterseg.setRGB(n, m, rgb);
                             } else {
                                 continue;
                             }
                         }
                     }
-                    path = path_process + "\\single";
+                    path = path_process + pathRoot;
                     SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
-                    imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
+                    imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index, pathRoot + "_normal");
                     index++;
 
                 } else {
-                    if ( k == 0 && alledge[k][2] == 1){
-                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] , alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
-                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
-                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
-                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
-                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
+                    if (k == 0 && alledge[k][2] == 1) {
+////                        去除上部空白行
+//                        int countZero = 0;
+//                        int blankUp = 0;
+//                        for (int i = alledge[k][0] + 1; i < alledge[k][1] - 1; i++) {
+//                            if (countZero == width + 2 || countZero == width + 1) {
+//                                blankUp++;
+//                                countZero = 0;
+//                            } else if (i != alledge[k][0] + 1) {
+//                                break;
+//                            }
+//                            for (int j = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; j < alledge[k][3] - 1; j++) {
+//                                if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                    countZero++;
+//                                }
+//                            }
+//                        }
+//
+////                        去除下部空白行
+//                        int blankDown = 0;
+//                        countZero = 0;
+//                        for (int i = alledge[k][1] - 1; i > alledge[k][0] + 1; i--) {
+//                            if (countZero == width + 2 || countZero == width + 1) {
+//                                blankDown++;
+//                                countZero = 0;
+//                            } else if (i != alledge[k][1] - 1) {
+//                                break;
+//                            }
+//                            for (int j = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; j < alledge[k][3] - 1; j++) {
+//                                if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+//                                    countZero++;
+//                                }
+//                            }
+//                        }
+//
+////                        去除左边空白行
+//                        int blankLeft = 0;
+//                        countZero = 0;
+//                        for (int i = (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; i < alledge[k][3] - 1; i++) {
+//                            if (countZero == width + 1 || countZero == width) {
+//                                blankLeft++;
+//                                countZero = 0;
+//                            } else if (i != alledge[k][1] - 1) {
+//                                break;
+//                            }
+//                            for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                                if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                    countZero++;
+//                                }
+//                            }
+//                        }
+//
+////                      去除右边空白行
+//                        int blankRight = 0;
+//                        countZero = 0;
+//                        for (int i = alledge[k][3] - 1; i > (alledge[k][2] + (alledge[k][3] - alledge[k][2]) / 2) - 1; i--) {
+//                            if (countZero == width + 1 || countZero == width) {
+//                                blankRight++;
+//                                countZero = 0;
+//                            } else if (i != alledge[k][1] - 1) {
+//                                break;
+//                            }
+//                            for (int j = alledge[k][0] + 1; j < alledge[k][1] - 1; j++) {
+//                                if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+//                                    countZero++;
+//                                }
+//                            }
+//                        }
+                        int[] deleteBlank = DeleteBlank(image,alledge[k][2] - 1,alledge[k][3] - 1,alledge[k][0] + 1,alledge[k][1] - 1);
+                        int blankUp = deleteBlank[0];
+                        int blankDown =deleteBlank[1];
+                        int blankLeft = deleteBlank[2];
+                        int blankRight = deleteBlank[3];
+                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] - blankDown - blankUp, alledge[k][1] - alledge[k][0] - 2 - blankLeft - blankRight, BufferedImage.TYPE_BYTE_BINARY);
+//                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
+//                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
+//                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
+//                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
 
-                        for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                        for (int j = alledge[k][0] + 1 + blankUp, m = 0; j < alledge[k][1] - 1 - blankDown; j++, m++) {
                             boolean flag = false;
-                            for (int i = alledge[k][2] - 1, n = 0; i < alledge[k][3] - 1; i++, n++) {
+                            for (int i = alledge[k][2] - 1 + blankLeft, n = 0; i < alledge[k][3] - 1 - blankRight; i++, n++) {
 
                                 int rgb = image.getRGB(i, j);
                                 image_afterseg.setRGB(n, m, rgb);
                             }
                         }
-                        path = path_process + "\\single";
+                        path = path_process + pathRoot;
                         SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
-                        imgScale(image_afterseg,image_afterseg.getWidth(),image_afterseg.getHeight(),normalizeSize,normalizeSize,index);
+                        imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index, pathRoot + "_normal");
                         index++;
                     } else {
-                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] - 2, alledge[k][1] - alledge[k][0] - 2, BufferedImage.TYPE_BYTE_BINARY);
-                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
-                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
-                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
-                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
+                        int[] deleteBlank = DeleteBlank(image,alledge[k][2],alledge[k][3] - 1,alledge[k][0] + 1,alledge[k][1] - 1);
+                        int blankUp = deleteBlank[0];
+                        int blankDown =deleteBlank[1];
+                        int blankLeft = deleteBlank[2];
+                        int blankRight = deleteBlank[3];
+                        image_afterseg = new BufferedImage(alledge[k][3] - alledge[k][2] - 2 - blankUp - blankDown, alledge[k][1] - alledge[k][0] - 2 - blankLeft - blankRight, BufferedImage.TYPE_BYTE_BINARY);
+//                        System.out.println("alledge[" + k + "][0] : " + alledge[k][0]);
+//                        System.out.println("alledge[" + k + "][1] : " + alledge[k][1]);
+//                        System.out.println("alledge[" + k + "][2] : " + alledge[k][2]);
+//                        System.out.println("alledge[" + k + "][3] : " + alledge[k][3]);
 
-                        for (int j = alledge[k][0] + 1, m = 0; j < alledge[k][1] - 1; j++, m++) {
+                        for (int j = alledge[k][0] + 1 + blankUp, m = 0; j < alledge[k][1] - 1 - blankDown; j++, m++) {
                             boolean flag = false;
-                            for (int i = alledge[k][2], n = 0; i < alledge[k][3] - 1; i++, n++) {
+                            for (int i = alledge[k][2] + blankLeft, n = 0; i < alledge[k][3] - 1 - blankRight; i++, n++) {
                                 if (i != alledge[0][2] && !flag) {
                                     i++;
                                     flag = true;
@@ -617,9 +858,9 @@ public class ImageProcess {
                                 image_afterseg.setRGB(n, m, rgb);
                             }
                         }
-                        path = path_process + "\\single";
+                        path = path_process + pathRoot;
                         SaveFile(image_afterseg, path, file.getName().replace(".jpg", "") + "_" + index + ".bmp");
-                        imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index);
+                        imgScale(image_afterseg, image_afterseg.getWidth(), image_afterseg.getHeight(), normalizeSize, normalizeSize, index, pathRoot + "_normal");
                         index++;
                     }
                 }
@@ -627,21 +868,21 @@ public class ImageProcess {
         }
     }
 
-//    双线性插值
-    public void imgScale(BufferedImage image, int srcW, int srcH, int destW, int destH, int index) throws IOException{
+    //    双线性插值
+    public void imgScale(BufferedImage image, int srcW, int srcH, int destW, int destH, int index, String path) throws IOException {
 
-        BufferedImage imageDest = new BufferedImage(destW,destH,BufferedImage.TYPE_BYTE_BINARY);
-        float rowRatio = ((float)srcH) / ((float)destH);
-        float colRatio = ((float)srcW) / ((float)destW);
+        BufferedImage imageDest = new BufferedImage(destW, destH, BufferedImage.TYPE_BYTE_BINARY);
+        float rowRatio = ((float) srcH) / ((float) destH);
+        float colRatio = ((float) srcW) / ((float) destW);
 
-        for(int col = 0; col < destW; col++) {
+        for (int col = 0; col < destW; col++) {
 
-            double srcCol = ((float)col) * colRatio;
+            double srcCol = ((float) col) * colRatio;
             double k = Math.floor(srcCol);
             double u = srcCol - k;
-            for(int row = 0; row < destH; row++) {
+            for (int row = 0; row < destH; row++) {
 
-                double srcRow = ((float)row) * rowRatio;
+                double srcRow = ((float) row) * rowRatio;
                 double j = Math.floor(srcRow);
                 double t = srcRow - j;
 
@@ -650,15 +891,15 @@ public class ImageProcess {
                 double coffiecent3 = t * u;
                 double coffiecent4 = (1.0d - t) * u;
 
-                int rgb =(int) (coffiecent1 * (image.getRGB(getClip((int)k, srcW - 1, 0),getClip((int)j,srcH -1,0)) & 0xFF )+
-                        coffiecent2 * (image.getRGB(getClip((int)k, srcW - 1, 0),getClip((int)j +1,srcH -1,0)) & 0xFF ) +
-                        coffiecent3 * (image.getRGB(getClip((int)k+1, srcW - 1, 0),getClip((int)j+1,srcH -1,0)) & 0xFF ) +
-                        coffiecent4 * (image.getRGB(getClip((int)k+1, srcW - 1, 0),getClip((int)j,srcH -1,0)) & 0xFF ));
-                Color color = new Color(rgb,rgb,rgb);
-                imageDest.setRGB(col,row,color.getRGB());
+                int rgb = (int) (coffiecent1 * (image.getRGB(getClip((int) k, srcW - 1, 0), getClip((int) j, srcH - 1, 0)) & 0xFF) +
+                        coffiecent2 * (image.getRGB(getClip((int) k, srcW - 1, 0), getClip((int) j + 1, srcH - 1, 0)) & 0xFF) +
+                        coffiecent3 * (image.getRGB(getClip((int) k + 1, srcW - 1, 0), getClip((int) j + 1, srcH - 1, 0)) & 0xFF) +
+                        coffiecent4 * (image.getRGB(getClip((int) k + 1, srcW - 1, 0), getClip((int) j, srcH - 1, 0)) & 0xFF));
+                Color color = new Color(rgb, rgb, rgb);
+                imageDest.setRGB(col, row, color.getRGB());
             }
         }
-        SaveFile(imageDest,path_process + "\\normalization", file.getName().replace(".jpg", "") + "_"+ index + "normal.bmp" );
+        SaveFile(imageDest, path_process + path, file.getName().replace(".jpg", "") + "_" + index + "normal.bmp");
     }
 
     public int getClip(int x, int max, int min) {
@@ -675,7 +916,7 @@ public class ImageProcess {
             EightPosition(flag, x_p - 1, y_p, edge);
         }
         //右
-        if ((x_p + 1) < width && flag[y_p][x_p + 1]== 1) {
+        if ((x_p + 1) < width && flag[y_p][x_p + 1] == 1) {
             flag[y_p][x_p + 1] = 0;
             if (x_p + 1 > edge[3])
                 edge[3] = x_p + 1;
@@ -779,11 +1020,198 @@ public class ImageProcess {
     }
 
     public static void MakeDir(File file) {
-        if ( file.getParentFile().exists() ){
+        if (file.getParentFile().exists()) {
             file.mkdir();
         } else {
             MakeDir(file.getParentFile());
             file.mkdir();
         }
     }
+
+    public void PrintPix(BufferedImage image) {
+        for (int i = 0; i < image.getHeight(); i++) {
+            for (int j = 0; j < image.getWidth(); j++) {
+                if ((image.getRGB(j, i) & 0xff) == forge_color.getBlue()) {
+                    System.out.print("1,");
+                } else {
+                    System.out.print("0,");
+                }
+            }
+        }
+    }
+
+    public int[] DeleteBlank(BufferedImage image,int startX,int endX,int startY,int endY){
+
+//                    去除上部空白行
+        int countZero = 0;
+        int blankUp = 0;
+        for (int i = startY; i < endY; i++) {
+            if (countZero == width + 2 || countZero == width + 1) {
+                blankUp++;
+                countZero = 0;
+            } else if (i!= startY) {
+                break;
+            }
+            for (int j = startX; j < endX; j++) {
+                if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+                    countZero++;
+                }
+            }
+        }
+
+//                    去除下部空白行
+        int blankDown = 0;
+        countZero = 0;
+        for (int i = endY; i > startY; i--) {
+            if (countZero == width + 2 || countZero == width + 1) {
+                blankDown++;
+                countZero = 0;
+            } else if (i!= endY) {
+                break;
+            }
+            for (int j = startX; j < endX; j++) {
+                if ((image.getRGB(j, i) & 0xFF) == background_color.getGreen()) {
+                    countZero++;
+                }
+            }
+        }
+
+//                    去除左边空白行
+        int blankLeft = 0;
+        countZero = 0;
+        for (int i = startX; i < endX; i++) {
+            if (countZero == width + 1 || countZero == width) {
+                blankLeft++;
+                countZero = 0;
+            } else if (i!= startX) {
+                break;
+            }
+            for (int j = startY; j < endY; j++) {
+                if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+                    countZero++;
+                }
+            }
+        }
+
+//                    去除右边空白行
+        int blankRight = 0;
+        countZero = 0;
+        for (int i = endX; i > startX; i--) {
+            if (countZero == width + 1 || countZero == width) {
+                blankRight++;
+                countZero = 0;
+            } else if (i!= endX) {
+                break;
+            }
+            for (int j = startY; j < endY; j++) {
+                if ((image.getRGB(i, j) & 0xFF) == background_color.getGreen()) {
+                    countZero++;
+                }
+            }
+        }
+
+        int[] delete = {blankUp,blankDown,blankLeft,blankRight};
+        return delete;
+    }
+
+    public String MatchTemp(File file){
+        File[] filesTemp = new File("resources/Template").listFiles();
+        ArrayList<Integer> codeTpl = null;
+        ArrayList<Integer> code = null;
+        BufferedImage imageTpl = null;
+        BufferedImage image = null;
+        double maxRate = 0.0;
+        double rateTmp = 0.0;
+        String recoResult = null;
+        for (int i = 0; i < filesTemp.length; i++){
+//            if (filesTemp[i].getName().substring(0, 1).equals("8") || filesTemp[i].getName().substring(0, 1).equals("B") || filesTemp[i].getName().substring(0, 1).equals("3")) {
+                try {
+                    imageTpl = ImageIO.read(filesTemp[i]);
+                    image = ImageIO.read(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                codeTpl = ReadPix(imageTpl);
+                code = ReadPix(image);
+                rateTmp = GetRate(code, codeTpl);
+                if (rateTmp > maxRate) {
+                    maxRate = rateTmp;
+                    recoResult = filesTemp[i].getName().substring(0, 1);
+                }
+                System.out.println("template file name : " + filesTemp[i].getName().substring(0, 1));
+//            }
+        }
+        return recoResult;
+    }
+
+    public ArrayList<Integer> ReadPix(BufferedImage image){
+        ArrayList<Integer> code = new ArrayList<Integer>();
+        for (int i = 0; i < image.getHeight(); i++){
+            for (int j = 0; j < image.getWidth(); j++){
+                if ((image.getRGB(j,i) & 0xff ) == forge_color.getBlue()){
+                    code.add(1);
+                } else {
+                    code.add(0);
+                }
+            }
+        }
+        return code;
+    }
+
+    public double GetRate(ArrayList<Integer> code, ArrayList<Integer> codeTpl){
+
+        int countEqual = 0;
+        int countOneTpl = 0;
+        int countOne = 0;
+        for (int i = 0; i < code.size(); i++){
+            if (code.get(i) == 1){
+                countOne++;
+            }
+        }
+        for (int i = 0; i < codeTpl.size(); i++){
+            if (codeTpl.get(i) == 1){
+                countOneTpl++;
+                if (code.get(i) == codeTpl.get(i)){
+                    countEqual++;
+                }
+            }
+        }
+        System.out.println("countOne:" + countOne);
+        System.out.println("countOneTpl:" + countOneTpl);
+        System.out.println("countEqual:" + countEqual);
+        System.out.println("rate:" + (double)countEqual/countOneTpl);
+        if ( countOne - countOneTpl > 20 ) {
+            if ((double) countEqual / countOneTpl < 0.85) {
+                return 0;
+            }
+            return 0;
+        }
+        return (double)countEqual/countOneTpl;
+    }
+
+    public String MatchTempTest(File file,File filetml){
+        ArrayList<Integer> codeTpl = null;
+        ArrayList<Integer> code = null;
+        BufferedImage imageTpl = null;
+        BufferedImage image = null;
+        double maxRate = 0.0;
+        double rateTmp = 0.0;
+        String recoResult = null;
+        try {
+            imageTpl = ImageIO.read(filetml);
+            image = ImageIO.read(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        codeTpl = ReadPix(imageTpl);
+        code = ReadPix(image);
+        rateTmp = GetRate(code, codeTpl);
+        if (rateTmp > maxRate) {
+            maxRate = rateTmp;
+            recoResult = filetml.getName().substring(0, 1);
+        }
+        System.out.println("template file name : " + filetml.getName().substring(0, 1));
+        return recoResult;
+    }
+
 }
