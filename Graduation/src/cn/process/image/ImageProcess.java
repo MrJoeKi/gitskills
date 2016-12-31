@@ -1,5 +1,7 @@
 package cn.process.image;
 
+
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -12,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- * Created by Joe on 2016/10/25.
+ * 图像处理类
  */
 public class ImageProcess {
 
@@ -23,12 +25,61 @@ public class ImageProcess {
     static Color background_color = Color.WHITE;
     static Color forge_color = Color.BLACK;
     int normalizeSize = 16;
-    int charNum = 6;
+    int charNum = 0;
 
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public String getPath_process() {
+        return path_process;
+    }
+
+    public void setPath_process(String path_process) {
+        this.path_process = path_process;
+    }
+
+    public int getNormalizeSize() {
+        return normalizeSize;
+    }
+
+    public void setNormalizeSize(int normalizeSize) {
+        this.normalizeSize = normalizeSize;
+    }
+
+    public int getCharNum() {
+        return charNum;
+    }
+
+    public void setCharNum(int charNum) {
+        this.charNum = charNum;
+    }
+
+    /**
+     * 无参构造函数
+     */
     public ImageProcess(){
 
     }
 
+    /**
+     * 有参构造函数
+     * @param file 图片文件
+     * @param image 图片的bufferimage
+     * @throws IOException
+     */
     public ImageProcess(File file, BufferedImage image) throws IOException {
 
         this.file = file;
@@ -36,7 +87,12 @@ public class ImageProcess {
         height = image.getHeight();
     }
 
-    //    灰度化操作
+    /**
+     * 灰度化操作
+     * @param image 原始图片的bufferimage
+     * @return 灰度化后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage Gray(BufferedImage image) throws IOException {
         int rgb;
         BufferedImage image_gray = new BufferedImage(width, height, image.getType());
@@ -57,9 +113,15 @@ public class ImageProcess {
         return image_gray;
     }
 
-    //    二值化操作
+    /**
+     * 二值化操作，运用OTSU算法
+     * @param image 灰度化后图片的bufferimage
+     * @return 二值化后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage Binary(BufferedImage image) throws IOException {
-        int threshold = Ostu(image);
+        int threshold = Otsu(image);
+        System.out.println("threshold = " + threshold);
         BufferedImage image_binary = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int rgb;
         for (int i = 0; i < width; i++) {
@@ -76,71 +138,37 @@ public class ImageProcess {
         return image_binary;
     }
 
-    //    形态学膨胀操作
-    public BufferedImage Expand(BufferedImage image) throws IOException {
-
-        int[] inPixels = new int[width * height];
-        int[] outPixels = new int[width * height];
-        BufferedImage image_expand = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
-        int index = 0, index1 = 0, newRow = 0, newCol = 0;
-        int tb1 = 0;
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++)
-                inPixels[i * width + j] = image.getRGB(j, i);
-        }
-        for (int row = 0; row < height; row++) {
-            int tb = 0;
-            for (int col = 0; col < width; col++) {
-                index = row * width + col;
-                tb = inPixels[index] & 0xff;
-                boolean dilation = false;
-                for (int offsetY = -1; offsetY <= 1; offsetY++) {
-                    for (int offsetX = -1; offsetX <= 1; offsetX++) {
-                        if (offsetY == 0 && offsetX == 0) {
-                            continue;
-                        }
-                        newRow = row + offsetY;
-                        newCol = col + offsetX;
-                        if (newRow < 0 || newRow >= height) {
-                            newRow = 0;
-                        }
-                        if (newCol < 0 || newCol >= width) {
-                            newCol = 0;
-                        }
-                        index1 = newRow * width + newCol;
-                        tb1 = inPixels[index1] & 0xff;
-                        if (tb1 == forge_color.getRed()) {
-                            dilation = true;
-                            break;
-                        }
-                    }
-                    if (dilation) {
-                        break;
-                    }
-                }
-                if (dilation) {
-                    tb = 0;
-                } else {
-                    tb = 255;
-                }
-                outPixels[index] = tb;
+    /**
+     * 带阈值参数的二值化方法
+     * @param image 灰度化后的图像
+     * @param threshold 输入的阈值
+     * @return 二值化后的bufferimage
+     * @throws IOException
+     */
+    public BufferedImage BinaryWithParam(BufferedImage image, int threshold) throws IOException {
+        System.out.println("threshold = " + threshold);
+        BufferedImage image_binary = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        int rgb;
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                rgb = image.getRGB(i, j) & 0xFF;
+                if (rgb > threshold)
+                    image_binary.setRGB(i, j, background_color.getRGB());
+                else
+                    image_binary.setRGB(i, j, forge_color.getRGB());
             }
         }
-
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                Color color = new Color(outPixels[i * width + j], outPixels[i * width + j], outPixels[i * width + j]);
-                image_expand.setRGB(j, i, color.getRGB());
-            }
-        }
-//        File newFile = new File(System.getProperty("user.dir") + "/expand.bmp");
-//        ImageIO.write(image_expand, "bmp", newFile);
-        String path = path_process + "\\expand";
-        SaveFile(image_expand, path, file.getName().replace(".jpg", "") + "_expand.bmp");
-        return image_expand;
+        String path = path_process + "\\binary";
+        SaveFile(image_binary, path, file.getName().replace(".jpg", "") + "_binary" + threshold +  ".bmp");
+        return image_binary;
     }
 
-    //    形态学腐蚀
+    /**
+     * 腐蚀去噪算法
+     * @param image 二值化后的图像bufferimage
+     * @return 腐蚀后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage Erosion(BufferedImage image) throws IOException {
         BufferedImage image_erosion = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int[] inPixels = new int[width * height];
@@ -205,7 +233,81 @@ public class ImageProcess {
         return image_erosion;
     }
 
-    //    均值滤波
+    /**
+     * 膨胀操作
+     * @param image 腐蚀后图片的bufferimage
+     * @return 膨胀后的bufferimage
+     * @throws IOException
+     */
+    public BufferedImage Expand(BufferedImage image) throws IOException {
+
+        int[] inPixels = new int[width * height];
+        int[] outPixels = new int[width * height];
+        BufferedImage image_expand = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        int index = 0, index1 = 0, newRow = 0, newCol = 0;
+        int tb1 = 0;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++)
+                inPixels[i * width + j] = image.getRGB(j, i);
+        }
+        for (int row = 0; row < height; row++) {
+            int tb = 0;
+            for (int col = 0; col < width; col++) {
+                index = row * width + col;
+                tb = inPixels[index] & 0xff;
+                boolean dilation = false;
+                for (int offsetY = -1; offsetY <= 1; offsetY++) {
+                    for (int offsetX = -1; offsetX <= 1; offsetX++) {
+                        if (offsetY == 0 && offsetX == 0) {
+                            continue;
+                        }
+                        newRow = row + offsetY;
+                        newCol = col + offsetX;
+                        if (newRow < 0 || newRow >= height) {
+                            newRow = 0;
+                        }
+                        if (newCol < 0 || newCol >= width) {
+                            newCol = 0;
+                        }
+                        index1 = newRow * width + newCol;
+                        tb1 = inPixels[index1] & 0xff;
+                        if (tb1 == forge_color.getRed()) {
+                            dilation = true;
+                            break;
+                        }
+                    }
+                    if (dilation) {
+                        break;
+                    }
+                }
+                if (dilation) {
+                    tb = 0;
+                } else {
+                    tb = 255;
+                }
+                outPixels[index] = tb;
+            }
+        }
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                Color color = new Color(outPixels[i * width + j], outPixels[i * width + j], outPixels[i * width + j]);
+                image_expand.setRGB(j, i, color.getRGB());
+            }
+        }
+//        File newFile = new File(System.getProperty("user.dir") + "/expand.bmp");
+//        ImageIO.write(image_expand, "bmp", newFile);
+        String path = path_process + "\\expand";
+        SaveFile(image_expand, path, file.getName().replace(".jpg", "") + "_expand.bmp");
+        return image_expand;
+    }
+
+    /**
+     * 均值滤波算法
+     * @param image 二值化后图像的bufferimage
+     * @return 均值滤波后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage AvrFiltering(BufferedImage image) throws IOException {
         BufferedImage image_denoise = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int[] inPixels = new int[width * height];
@@ -248,7 +350,12 @@ public class ImageProcess {
         return image_denoise;
     }
 
-    //    中值滤波
+    /**
+     * 中值滤波去噪
+     * @param image 二值化后图像的bufferimage
+     * @return 中值滤波后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage MedianFiltering(BufferedImage image) throws IOException {
         BufferedImage image_denoise = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         int[] inPixels = new int[width * height];
@@ -267,17 +374,18 @@ public class ImageProcess {
                     //g = median[(x-1,y-1) + f(x,y-1)+ f(x+1,y-1)
                     //  + f(x-1,y) + f(x,y) + f(x+1,y)
                     //  + f(x-1,y+1) + f(x,y+1) + f(x+1,y+1)]
-                    temp[0] = cm.getRed(inPixels[x - 1 + (y - 1) * width]);
+                    temp[0] = cm.getRed(inPixels[x + (y) * width]);
                     temp[1] = cm.getRed(inPixels[x + (y - 1) * width]);
-                    temp[2] = cm.getRed(inPixels[x + 1 + (y - 1) * width]);
-                    temp[3] = cm.getRed(inPixels[x - 1 + (y) * width]);
-                    temp[4] = cm.getRed(inPixels[x + (y) * width]);
-                    temp[5] = cm.getRed(inPixels[x + 1 + (y) * width]);
-                    temp[6] = cm.getRed(inPixels[x - 1 + (y + 1) * width]);
-                    temp[7] = cm.getRed(inPixels[x + (y + 1) * width]);
-                    temp[8] = cm.getRed(inPixels[x + 1 + (y + 1) * width]);
+                    temp[2] = cm.getRed(inPixels[x + 1 + (y) * width]);
+                    temp[3] = cm.getRed(inPixels[x + (y + 1) * width]);
+                    temp[4] = cm.getRed(inPixels[x - 1 + (y) * width]);
+
+//                    temp[5] = cm.getRed(inPixels[x - 1 + (y - 1) * width]);
+//                    temp[6] = cm.getRed(inPixels[x + 1 + (y - 1) * width]);
+//                    temp[7] = cm.getRed(inPixels[x - 1 + (y + 1) * width]);
+//                    temp[8] = cm.getRed(inPixels[x + 1 + (y + 1) * width]);
                     Arrays.sort(temp);
-                    r = temp[4];
+                    r = temp[2];
                     outPixels[y * width + x] = 255 << 24 | r << 16 | r << 8 | r;
                 } else {
                     outPixels[y * width + x] = inPixels[y * width + x];
@@ -296,7 +404,12 @@ public class ImageProcess {
         return image_denoise;
     }
 
-    //    高斯滤波，高斯模糊（有问题！！！）
+    /**
+     * 高斯模糊、高斯滤波算法
+     * @param image 图像的bufferimage
+     * @return 高斯模糊后的bufferimage
+     * @throws IOException
+     */
     public BufferedImage Gaussian(BufferedImage image) throws IOException {
 
         BufferedImage image_gaussian = null;
@@ -307,8 +420,13 @@ public class ImageProcess {
         return image_gaussian;
     }
 
-    //    垂直-Y投影直方图
-    public void YProjection(BufferedImage image) throws IOException {
+    /**
+     * 数值投影图片生成
+     * @param image 图像的bufferimage
+     * @return 返回竖直投影的数组
+     * @throws IOException
+     */
+    public int[] YProjection(BufferedImage image) throws IOException {
         int[] horizon = new int[width];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -322,13 +440,43 @@ public class ImageProcess {
         BufferedImage image_new = getHist(horizon);
         String path = path_process + "\\Ypro";
         SaveFile(image_new, path, file.getName().replace(".jpg", "") + "_yprojection.bmp");
+        return horizon;
     }
 
     //    水平-X投影直方图
-    public void XProjection(BufferedImage image) {
+    public int[] XProjection(BufferedImage image) {
+        int[] positionY = new int[2];
+        int[] vertical = new int[height];
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                if ((image.getRGB(i, j) & 0xFF) < background_color.getRed()) {
+//                测试规整编码
+//                if ((image.getRGB(i,j)&0xFF) >= background_color.getRed()){
+                    vertical[j]++;
+                }
+            }
+        }
+        for (int i = 0; i < vertical.length; i++){
+            if (vertical[i] == 0 && vertical[i+1] != 0){
+                positionY[0] = i + 1;
+                break;
+            }
+        }
 
+        for (int i = vertical.length - 1; i > 0; i--){
+            if (vertical[i] == 0 && vertical[i-1] != 0){
+                positionY[1] = i - 1;
+                break;
+            }
+        }
+        return positionY;
     }
 
+    /**
+     * 获取直方图
+     * @param intensity
+     * @return
+     */
     public BufferedImage getHist(int[] intensity) {
 
         BufferedImage pic = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -358,7 +506,13 @@ public class ImageProcess {
         return pic;
     }
 
-    //边缘检测
+    /**
+     * 边缘检测算法
+     * @param image 去噪后图像的bufferimage
+     * @param pathRoot 保存边缘检测后图像的文件夹根目录
+     * @return 边缘检测后图像的bufferimage
+     * @throws IOException
+     */
     public BufferedImage Segmentation(BufferedImage image, String pathRoot) throws IOException {
 //        int[] horizon = new int[width];
 //        for (int i = 0; i < width; i++) {
@@ -415,7 +569,12 @@ public class ImageProcess {
         return imageSeg;
     }
 
-    public void ImageTrans(BufferedImage image) throws IOException {
+    /**
+     * 图片转换
+     * @param image 需转换的图片bufferimage
+     * @throws IOException
+     */
+    public BufferedImage ImageTransWhiteBlack(BufferedImage image) throws IOException {
         BufferedImage image_new = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
@@ -428,10 +587,36 @@ public class ImageProcess {
                 }
             }
         }
-        String path = path_process + "\\imagetrans";
+        String path = path_process + "\\imagetransblack";
         SaveFile(image_new, path, file.getName().replace(".jpg", "") + "_colortrans.bmp");
+        return image_new;
     }
 
+    public BufferedImage ImageTransBlackWhite(BufferedImage image) throws IOException {
+        BufferedImage image_new = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if ((image.getRGB(i, j) & 0xFF) == background_color.getRed()) {
+                    Color color = new Color(forge_color.getBlue(), forge_color.getBlue(), forge_color.getBlue());
+                    image_new.setRGB(i, j, color.getRGB());
+                } else {
+                    Color color = new Color(background_color.getBlue(), background_color.getBlue(), background_color.getBlue());
+                    image_new.setRGB(i, j, color.getRGB());
+                }
+            }
+        }
+        String path = path_process + "\\imagetranswhite";
+        SaveFile(image_new, path, file.getName().replace(".jpg", "") + "_colortrans.bmp");
+        return image_new;
+    }
+
+    /**
+     * 获取单个字符的矩形区域
+     * @param image 边缘检测后的图像bufferimage
+     * @param charNum 字符个数
+     * @return 所有单个字符的上下左右坐标的数组
+     * @throws IOException
+     */
     public int[][] GetSingleChar(BufferedImage image) throws IOException {
 //        System.out.println(width);
 //        System.out.println(height);
@@ -456,7 +641,7 @@ public class ImageProcess {
 //        }
 
         int[] edge = {0, 0, 0, 0};
-        int[][] alledge = new int[6][4];
+        int[][] alledge = new int[charNum][4];
         int index = 0;
 
 //        i为长（x）轴，j为高（y）轴
@@ -471,7 +656,8 @@ public class ImageProcess {
                     EightPosition(flag, i, j, edge);
                     System.out.println("i = " + i);
                     System.out.println("j = " + j);
-                    if (((edge[1] - edge[0]) * (edge[3] - edge[2])) > 150) {
+//                    if (((edge[1] - edge[0]) * (edge[3] - edge[2])) > 150) {
+                    if (((edge[1] - edge[0]) * (edge[3] - edge[2])) > (width*height)/(charNum*10)) {
                         alledge[index][0] = edge[0];
                         alledge[index][1] = edge[1] + 1;
                         alledge[index][2] = edge[2];
@@ -507,7 +693,7 @@ public class ImageProcess {
 //            }
 //        }
 
-        for (int k = 0; k < 6; k++) {
+        for (int k = 0; k < charNum; k++) {
             for (int j = alledge[k][0]; j < alledge[k][1]; j++) {
                 for (int i = alledge[k][2]; i < alledge[k][3]; i++) {
                     if (flag_old[j][i] == 1)
@@ -519,7 +705,7 @@ public class ImageProcess {
             }
         }
 
-        for (int k = 0; k < 6; k++) {
+        for (int k = 0; k < charNum; k++) {
             System.out.println("Area[" + k + "]:" + ((alledge[k][1] - alledge[k][0]) * (alledge[k][3] - alledge[k][2])));
         }
 
@@ -536,7 +722,14 @@ public class ImageProcess {
 
     }
 
-    public void PrintAfterSeg(BufferedImage image, int[][] alledge, String pathRoot) throws IOException {
+    /**
+     * 保存分割后的单个字符图片
+     * @param image 去噪后图像的bufferimage
+     * @param alledge 所有字符的上下左右坐标，二维数组
+     * @param pathRoot 保存所有单个字符的文件夹根目录
+     * @throws IOException
+     */
+    public void PrintAfterSeg(BufferedImage image, int[][] alledge, String pathRoot ) throws IOException {
         BufferedImage image_afterseg = null;
         int index = 0;
         String path = null;
@@ -545,7 +738,11 @@ public class ImageProcess {
                 continue;
             } else {
                 int area = ((alledge[index][1] - alledge[index][0]) * (alledge[index][3] - alledge[index][2]));
-                if (area > 700 && (alledge[index][3] - alledge[index][2]) > 30) {
+                /**
+                 * maxArea[0]代表字符中的最大面积，maxArea[1]代表字符中最大的宽度
+                 */
+                int[] maxArea = CalMaxArea(alledge);
+                if (area > maxArea[0] && (alledge[index][3] - alledge[index][2]) > maxArea[1]) {
                     int width = (alledge[k][3] - alledge[k][2] - 2) / 2;
                     int height = alledge[k][1] - alledge[k][0] - 2;
 
@@ -635,7 +832,7 @@ public class ImageProcess {
                                 flag = true;
                             }
                             int rgb = image.getRGB(i, j);
-                            System.out.println("n = " + n + ",m = " + m + "i = " + i + ",j = " + j);
+//                            System.out.println("n = " + n + ",m = " + m + "i = " + i + ",j = " + j);
                             image_afterseg.setRGB(n, m, rgb);
                         }
                     }
@@ -868,7 +1065,34 @@ public class ImageProcess {
         }
     }
 
-    //    双线性插值
+    public int[][] GetByProjection(int[] horizon, int[] vertical){
+        int[][] alledge = new int[charNum][4];
+
+        for (int i = 1,j = 0; i < horizon.length - 1; i++){
+            if (horizon[i-1] == 0 && horizon[i] != 0){
+                alledge[j][2] = i - 1;
+                alledge[j][0] = vertical[0] - 1;
+                alledge[j][1] = vertical[1] + 2;
+            } else if (horizon[i] != 0 && horizon[i+1] == 0){
+                alledge[j][3] = i + 2;
+                j++;
+            }
+        }
+
+        return alledge;
+    }
+
+    /**
+     * 双线性转换法-归一化算法
+     * @param image
+     * @param srcW
+     * @param srcH
+     * @param destW
+     * @param destH
+     * @param index
+     * @param path
+     * @throws IOException
+     */
     public void imgScale(BufferedImage image, int srcW, int srcH, int destW, int destH, int index, String path) throws IOException {
 
         BufferedImage imageDest = new BufferedImage(destW, destH, BufferedImage.TYPE_BYTE_BINARY);
@@ -906,6 +1130,13 @@ public class ImageProcess {
         return x > max ? max : x < min ? min : x;
     }
 
+    /**
+     * 八连通区域检测
+     * @param flag 图像的二维数组
+     * @param x_p 起始点x
+     * @param y_p 起始点y
+     * @param edge 坐标数组
+     */
     public void EightPosition(int[][] flag, int x_p, int y_p, int[] edge) {
 
         //左
@@ -974,8 +1205,12 @@ public class ImageProcess {
         }
     }
 
-    //    Ostu算法
-    public int Ostu(BufferedImage image) {
+    /**
+     * OTSU算法
+     * @param image 灰度化图像的bufferimage
+     * @return 二值化阈值
+     */
+    public int Otsu(BufferedImage image) {
         int[] histData = new int[256];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -1011,7 +1246,13 @@ public class ImageProcess {
         return threshold;
     }
 
-    //    保存文件
+    /**
+     * 保存图像文件
+     * @param image 待保存图像的bufferimage
+     * @param path 保存路径
+     * @param filename 保存文件名
+     * @throws IOException
+     */
     public void SaveFile(BufferedImage image, String path, String filename) throws IOException {
         File fileDir = new File(path);
         MakeDir(fileDir);
@@ -1019,6 +1260,10 @@ public class ImageProcess {
         ImageIO.write(image, "bmp", newFile);
     }
 
+    /**
+     * 递归创建文件夹
+     * @param file 需要保存的文件
+     */
     public static void MakeDir(File file) {
         if (file.getParentFile().exists()) {
             file.mkdir();
@@ -1028,6 +1273,10 @@ public class ImageProcess {
         }
     }
 
+    /**
+     * 输出图像的编码0,1
+     * @param image
+     */
     public void PrintPix(BufferedImage image) {
         for (int i = 0; i < image.getHeight(); i++) {
             for (int j = 0; j < image.getWidth(); j++) {
@@ -1040,6 +1289,15 @@ public class ImageProcess {
         }
     }
 
+    /**
+     * 删除图像中的空白行和列
+     * @param image 图像的bufferimage
+     * @param startX 起始点x
+     * @param endX 结束点x
+     * @param startY 起始点y
+     * @param endY 结束点y
+     * @return
+     */
     public int[] DeleteBlank(BufferedImage image,int startX,int endX,int startY,int endY){
 
 //                    去除上部空白行
@@ -1114,6 +1372,11 @@ public class ImageProcess {
         return delete;
     }
 
+    /**
+     * 匹配算法
+     * @param file 待匹配字符的文件
+     * @return
+     */
     public String MatchTemp(File file){
         File[] filesTemp = new File("resources/Template").listFiles();
         ArrayList<Integer> codeTpl = null;
@@ -1122,29 +1385,58 @@ public class ImageProcess {
         BufferedImage image = null;
         double maxRate = 0.0;
         double rateTmp = 0.0;
-        String recoResult = null;
+        String recoResult = "";
         for (int i = 0; i < filesTemp.length; i++){
 //            if (filesTemp[i].getName().substring(0, 1).equals("8") || filesTemp[i].getName().substring(0, 1).equals("B") || filesTemp[i].getName().substring(0, 1).equals("3")) {
-                try {
-                    imageTpl = ImageIO.read(filesTemp[i]);
-                    image = ImageIO.read(file);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                codeTpl = ReadPix(imageTpl);
-                code = ReadPix(image);
-                rateTmp = GetRate(code, codeTpl);
-                if (rateTmp > maxRate) {
-                    maxRate = rateTmp;
-                    recoResult = filesTemp[i].getName().substring(0, 1);
-                }
-                System.out.println("template file name : " + filesTemp[i].getName().substring(0, 1));
-//            }
+            try {
+                imageTpl = ImageIO.read(filesTemp[i]);
+                image = ImageIO.read(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            codeTpl = ReadPix(imageTpl);
+            code = ReadPix(image);
+            rateTmp = GetRate(code, codeTpl);
+            if (rateTmp > maxRate) {
+                maxRate = rateTmp;
+                recoResult = filesTemp[i].getName().replaceAll(".bmp","").split("_")[0];
+            }
+            System.out.println("template file name : " + filesTemp[i].getName().substring(0, 1));
+//           }
+        }
+
+        /**
+         * 处理空白图片的标志
+         */
+        boolean flag = false;
+        for (int i = 0; i < code.size(); i++){
+            if (code.get(i) == 1){
+                flag =true;
+                break;
+            }
+        }
+
+        if (recoResult.equals("10")){
+            recoResult = "-";
+        } else if (recoResult.equals("11")){
+            recoResult = "+";
+        } else if (recoResult.equals("12")) {
+            recoResult = "*";
+        } else if (recoResult.equals("14") || recoResult.equals("15") || !flag){
+            recoResult = "=";
+        } else if (recoResult.equals("null")){
+            recoResult = "?";
         }
         return recoResult;
     }
 
+    /**
+     * 读取字符编码
+     * @param image 待读取的图像bufferimage
+     * @return 图像的编码arraylist
+     */
     public ArrayList<Integer> ReadPix(BufferedImage image){
+
         ArrayList<Integer> code = new ArrayList<Integer>();
         for (int i = 0; i < image.getHeight(); i++){
             for (int j = 0; j < image.getWidth(); j++){
@@ -1158,6 +1450,12 @@ public class ImageProcess {
         return code;
     }
 
+    /**
+     * 获取最大的匹配率
+     * @param code 匹配图像的编码
+     * @param codeTpl 模板图像的编码
+     * @return
+     */
     public double GetRate(ArrayList<Integer> code, ArrayList<Integer> codeTpl){
 
         int countEqual = 0;
@@ -1189,6 +1487,75 @@ public class ImageProcess {
         return (double)countEqual/countOneTpl;
     }
 
+    /**
+     * 输出所有的结果，包括运算式
+     * @param expression 按照模板匹配后生成的字符串
+     * @return 匹配结果
+     */
+    public String OutputResult(String expression){
+
+        String expreeesionOri = expression;
+        int length = expression.length();
+        int result = 0;
+        if (expression.matches("[0-9\\?]{1,3}\\+[0-9\\?]{1,3}[=-]{1,2}[0-9\\?]")){
+            if (expression.lastIndexOf("-") == length - 2){
+                char[] chars = expression.toCharArray();
+                chars[length - 2] = '=';
+                expression = String.valueOf(chars);
+                expreeesionOri = expression;
+            }
+
+            int qIndex = expression.indexOf("?");
+            expression = expression.replaceAll("\\?","");
+            if (qIndex == length - 1){
+                String[] results = expression.replaceAll("={1,2}","").split("\\+");
+                result = Integer.parseInt(results[0]) + Integer.parseInt(results[1]);
+                expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+            } else {
+                expression = expression.replaceAll("\\+","");
+                String[] results = expression.split("={1,2}");
+                result = Integer.parseInt(results[1]) - Integer.parseInt(results[0]);
+                expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+            }
+        } else if (expression.matches("[0-9\\?]{1,3}-[0-9\\?]{1,3}[=-]{1,2}[0-9\\?]")) {
+            if (expression.lastIndexOf("-") == length - 2){
+                char[] chars = expression.toCharArray();
+                chars[length - 2] = '=';
+                expression = String.valueOf(chars);
+                expreeesionOri = expression;
+            }
+            int qIndex = expression.indexOf("?");
+            expression = expression.replaceAll("\\?","");
+            if (qIndex == length - 1){
+                String[] results = expression.replaceAll("={1,2}","").split("\\-");
+                result = Integer.parseInt(results[0]) - Integer.parseInt(results[1]);
+                expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+            } else if (qIndex == 0){
+                expression = expression.replaceAll("\\-","");
+                String[] results = expression.split("={1,2}");
+                result = Integer.parseInt(results[0]) + Integer.parseInt(results[1]);
+                expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+            } else {
+                expression = expression.replaceAll("\\-","");
+                String[] results = expression.split("={1,2}");
+                result = Integer.parseInt(results[0]) - Integer.parseInt(results[1]);
+                expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+            }
+        } else if (expression.matches("[0-9\\?]{1,3}\\*[0-9\\?]{1,3}[=-]{1,2}[0-9\\?]")){
+            if (expression.lastIndexOf("-") == length - 2){
+                char[] chars = expression.toCharArray();
+                chars[length - 2] = '=';
+                expression = String.valueOf(chars);
+                expreeesionOri = expression;
+            }
+            expression = expression.replaceAll("\\?","");
+            String[] results = expression.replaceAll("={1,2}","").split("\\*");
+            result = Integer.parseInt(results[0]) * Integer.parseInt(results[1]);
+            expreeesionOri = expreeesionOri.replaceFirst("\\?",Integer.toString(result));
+        }
+        return expreeesionOri;
+    }
+
     public String MatchTempTest(File file,File filetml){
         ArrayList<Integer> codeTpl = null;
         ArrayList<Integer> code = null;
@@ -1214,4 +1581,108 @@ public class ImageProcess {
         return recoResult;
     }
 
+    public BufferedImage EightDenoise(BufferedImage image, int MaxNearPoints) throws IOException {
+        int blue;
+        int nearDots = 0;
+        BufferedImage imageDenoise = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        //逐点判断
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getHeight(); j++) {
+                int rgb = image.getRGB(i, j);
+                blue = rgb & 0xff;
+                if (blue == forge_color.getBlue()) {
+                    nearDots = 0;
+                    //判断周围8个点是否全为空
+                    if (i == 0 || i == width - 1 || i == 1 || j == 0 || j == height - 1 || j == 1)  //边框全去掉
+                    {
+                        imageDenoise.setRGB(i, j, background_color.getRGB());
+                    } else {
+                        if ((image.getRGB(i - 1, j - 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i, j - 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i + 1, j - 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i - 1, j) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i + 1, j) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i - 1, j + 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i, j + 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                        if ((image.getRGB(i + 1, j + 1) & 0xff) == forge_color.getBlue()) nearDots++;
+                    }
+
+                    if (nearDots < MaxNearPoints) {
+                        imageDenoise.setRGB(i, j, background_color.getRGB());
+                    } else {
+                        image.setRGB(i, j, forge_color.getRGB());
+                    }
+                } else { //背景
+                    imageDenoise.setRGB(i, j, background_color.getRGB());
+                }
+            }
+        }
+        SaveFile(imageDenoise, path_process + "\\eightdenoise", file.getName().replace(".jpg", "") + "_" +"eightdenoise.bmp");
+        return imageDenoise;
+    }
+
+    public String PreMatch(String expression){
+        boolean flag = false;
+
+        if (expression.matches("[-\\+\\*][0-9\\?]{1,3}[=-]{1,2}[0-9\\?]")){
+            expression = "?" + expression;
+            return expression;
+        } else if (expression.matches("[0-9\\?]{1,3}[-\\+\\*][=-]{1,2}[0-9\\?]")){
+            char[] chars = new char[expression.length() + 1];
+            for (int i = 0,j =0; i < expression.length(); i++){
+                if ((expression.charAt(i) == '-' || expression.charAt(i) == '+' || expression.charAt(i) == '*') && flag == false){
+                    chars[j] = expression.charAt(i);
+                    chars[++j] = '?';
+                    ++j;
+                } else {
+                    chars[j] = expression.charAt(i);
+                    ++j;
+                }
+            }
+            expression = String.valueOf(chars);
+            return expression;
+        } else if(expression.matches("[0-9\\?]{1,3}[-\\+\\*][0-9\\?]{1,3}[=-]{1,2}")) {
+            expression = expression + "?";
+            return expression;
+        }
+
+        return expression;
+    }
+
+    public int[] CalMaxArea(int[][] alledge){
+        int[] maxArea = new int[2];
+        int[] area = new int[alledge.length];
+        int[] wid = new int[alledge.length];
+        for (int i = 0 ; i < area.length; i++){
+            area[i] = (alledge[i][1]-alledge[i][0])*(alledge[i][3]-alledge[i][2]);
+            wid[i] = alledge[i][3]-alledge[i][2];
+        }
+        Arrays.sort(area);
+        Arrays.sort(wid);
+        if (area[alledge.length - 1] - area[alledge.length - 2] > 150){
+            maxArea[0] = area[alledge.length - 2];
+        } else {
+            maxArea[0] = area[alledge.length - 1];
+        }
+        if (wid[alledge.length - 1] - wid[alledge.length - 2] > 10){
+            maxArea[1] = wid[alledge.length - 2];
+        } else {
+            maxArea[1] = wid[alledge.length - 1];
+        }
+
+        return maxArea;
+    }
+
+    public void DeleteFiles(File file){
+        if (file.isDirectory()){
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++){
+                DeleteFiles(files[i]);
+                file.delete();
+            }
+        } else {
+            file.delete();
+        }
+        file.delete();
+    }
 }
